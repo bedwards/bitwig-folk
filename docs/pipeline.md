@@ -15,14 +15,18 @@ Source .mov  -->  Transcode  -->  Thumbnail  -->  Upload  -->  Schedule
 
 ### ffmpeg Command
 ```bash
+# Step 1: Probe duration for fade-out calculation
+DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "Folk Sequence NNN.mov")
+
+# Step 2: Transcode with fades baked in
 ffmpeg -i "Folk Sequence NNN.mov" \
-  -vf "crop=4096:2304:0:12,scale=3840:2160:flags=lanczos" \
+  -vf "crop=4096:2304:0:12,scale=3840:2160:flags=lanczos,fade=t=in:st=0:d=0.5,fade=t=out:st=${DURATION}-3:d=3" \
   -c:v libx264 -profile:v high -level 5.1 -preset slow \
   -b:v 35M -maxrate 40M -bufsize 80M \
   -r 60 -g 30 -bf 2 -flags +cgop \
   -pix_fmt yuv420p \
   -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
-  -af loudnorm=I=-14:TP=-1:LRA=11 \
+  -af "loudnorm=I=-14:TP=-1:LRA=11,afade=t=in:st=0:d=0.5,afade=t=out:st=${DURATION}-3:d=3" \
   -c:a aac -b:a 384k -ar 48000 -ac 2 \
   -movflags +faststart \
   -y "folk-sequence-NNN.mp4"
@@ -31,6 +35,10 @@ ffmpeg -i "Folk Sequence NNN.mov" \
 ### Processing Notes
 - `crop=4096:2304:0:12` removes 12px from top and 12px from bottom to achieve 16:9
 - `scale=3840:2160:flags=lanczos` scales to standard 4K UHD with high-quality resampling
+- `fade=t=in:st=0:d=0.5` — 0.5s video fade from black (barely perceptible, smooths the hard cut)
+- `fade=t=out:st=${DURATION}-3:d=3` — 3s video fade to black (graceful ending for music content)
+- `afade` — matching audio fades (applied after loudnorm so levels are correct before fading)
+- Duration is probed via ffprobe before encoding so fade-out timing is exact
 - `-preset slow` for better compression efficiency (worth the time for uploads)
 - `-b:v 35M` matches YouTube's recommended 4K SDR bitrate
 - `-g 30` sets GOP to half the frame rate (30 frames at 60fps)

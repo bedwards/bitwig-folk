@@ -42,17 +42,27 @@ folkseq <command> --help
 ## Video Encoding Settings (ffmpeg)
 
 ```bash
+# Probe duration first (needed for fade-out calculation)
+DURATION=$(ffprobe -v error -show_entries format=duration -of csv=p=0 input.mov)
+
 ffmpeg -i input.mov \
-  -vf "crop=4096:2304:0:12,scale=3840:2160" \
+  -vf "crop=4096:2304:0:12,scale=3840:2160,fade=t=in:st=0:d=0.5,fade=t=out:st=${DURATION}-3:d=3" \
   -c:v libx264 -profile:v high -preset slow \
   -b:v 35M -maxrate 40M -bufsize 80M \
   -r 60 -g 30 -bf 2 \
   -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
-  -af loudnorm=I=-14:TP=-1:LRA=11 \
+  -af "loudnorm=I=-14:TP=-1:LRA=11,afade=t=in:st=0:d=0.5,afade=t=out:st=${DURATION}-3:d=3" \
   -c:a aac -b:a 384k -ar 48000 -ac 2 \
   -movflags +faststart \
   -y output.mp4
 ```
+
+### Fade Settings
+
+- **Fade in**: 0.5s video + audio (barely perceptible, smooths the hard cut)
+- **Fade out**: 3s video + audio (graceful ending, standard for music content)
+- Fades are baked into the transcode step — no extra step required
+- Duration is probed via ffprobe before encoding so fade-out timing is exact
 
 ### Source Video Stats (Folk Sequence 000.mov)
 
