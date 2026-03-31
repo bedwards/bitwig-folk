@@ -88,11 +88,14 @@ ffmpeg -i input.mov \
 
 ## Scheduling Logic
 
-- One video per day at 3:00 PM US Central Time
+- One video per day, 7 days a week, at 3:00 PM US Central Time
 - CDT (Mar-Nov): UTC-5 -> 20:00 UTC
 - CST (Nov-Mar): UTC-6 -> 21:00 UTC
 - Rationale: 2-3 hours before peak viewing (6-9 PM) gives algorithm time to index and ramp distribution
 - Use `zoneinfo.ZoneInfo("America/Chicago")` for automatic DST handling
+- **Same-day publishing**: If the queue is empty and it's before 2:00 PM Central, schedule for today. Otherwise, schedule for tomorrow. The 1-hour buffer gives YouTube time to process 4K.
+- **Queue behavior**: If the queue has entries, always append to the back (next day after last scheduled). Never replace or reorder existing entries.
+- Brian may record multiple videos per day or skip days — the queue absorbs the variance
 
 ## Video Naming Convention
 

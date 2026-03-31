@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 
 CENTRAL = ZoneInfo("America/Chicago")
 PUBLISH_HOUR = 15  # 3:00 PM
+CUTOFF_HOUR = 14  # 2:00 PM — 1 hour before publish, gives YouTube time to process 4K
 
 OUTPUT_DIR = Path("output")
 SCHEDULE_PATH = OUTPUT_DIR / "logs" / "schedule.json"
@@ -16,14 +17,22 @@ SCHEDULE_PATH = OUTPUT_DIR / "logs" / "schedule.json"
 def next_publish_time(after=None):
     """Return the next available 3:00 PM Central publish slot.
 
-    If after is None, uses tomorrow at 3:00 PM Central.
-    If after is a datetime, returns the next day at 3:00 PM Central after that.
+    If after is None (empty queue):
+      - Today at 3:00 PM if it's before 2:00 PM Central (1-hour processing buffer)
+      - Tomorrow at 3:00 PM otherwise
+    If after is a datetime (queue has entries):
+      - Next day at 3:00 PM Central after that datetime
     """
     if after is None:
-        tomorrow = date.today() + timedelta(days=1)
+        now = datetime.now(CENTRAL)
+        today_cutoff = now.replace(hour=CUTOFF_HOUR, minute=0, second=0, microsecond=0)
+        if now < today_cutoff:
+            target = date.today()
+        else:
+            target = date.today() + timedelta(days=1)
     else:
-        tomorrow = after.date() + timedelta(days=1)
-    return datetime(tomorrow.year, tomorrow.month, tomorrow.day, PUBLISH_HOUR, 0, 0, tzinfo=CENTRAL)
+        target = after.date() + timedelta(days=1)
+    return datetime(target.year, target.month, target.day, PUBLISH_HOUR, 0, 0, tzinfo=CENTRAL)
 
 
 def get_last_scheduled():

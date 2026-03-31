@@ -87,21 +87,12 @@ ffmpeg -i "Folk Sequence NNN.mov" \
 ## 4. Scheduling
 
 ### Logic
-```python
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
-central = ZoneInfo("America/Chicago")
-
-def next_publish_time(start_date, episode_offset):
-    """Calculate publish time for episode N days after start."""
-    publish_date = start_date + timedelta(days=episode_offset)
-    local_time = datetime(
-        publish_date.year, publish_date.month, publish_date.day,
-        15, 0, 0, tzinfo=central
-    )
-    return local_time.isoformat()
-```
+- **Empty queue**: Schedule for today at 3:00 PM Central if before 2:00 PM cutoff, otherwise tomorrow
+- **Queue has entries**: Append to back — next day after last scheduled, 3:00 PM Central
+- **1-hour buffer**: The 2:00 PM cutoff gives YouTube at least 1 hour to process 4K before publish
+- **7 days a week**: No weekday/weekend distinction
+- **Append-only**: Never replace or reorder existing schedule entries
 
 ### DST Handling
 - `America/Chicago` automatically handles CDT (UTC-5) and CST (UTC-6)
