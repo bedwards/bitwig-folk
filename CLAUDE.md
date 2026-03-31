@@ -92,11 +92,9 @@ ffmpeg -i input.mov \
 
 - **Name**: Folk Sequence (13/100 chars)
 - **Handle**: @FolkSequence
-- **Description** (200/1000 chars):
+- **Description** (179/1000 chars):
   > Screen recordings of music creation in Bitwig Studio. Each episode captures a full session building a new track from scratch. No narration, no edits — just the creative process.
-  >
-  > https://jalopy.music/
-- **Link URL**: https://jalopy.music/
+- **Link URL** (channel link field): https://jalopy.music/
 
 ## Gemini Image Generation
 

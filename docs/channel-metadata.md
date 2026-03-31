@@ -9,13 +9,13 @@
 | URL | https://www.youtube.com/@FolkSequence | — | — |
 | Link URL | https://jalopy.music/ | — | — |
 
-## Channel Description (200/1000 chars)
+## Channel Description (179/1000 chars)
 
 ```
 Screen recordings of music creation in Bitwig Studio. Each episode captures a full session building a new track from scratch. No narration, no edits — just the creative process.
-
-https://jalopy.music/
 ```
+
+Note: `https://jalopy.music/` is set in the channel's **Link URL** field, not in the description.
 
 ## Default Video Title Pattern (17/100 chars)
 
@@ -23,12 +23,10 @@ https://jalopy.music/
 Folk Sequence 001
 ```
 
-## Default Video Description (82/5000 chars)
+## Default Video Description (60/5000 chars)
 
 ```
 A screen recording session creating music in Bitwig Studio.
-
-https://jalopy.music/
 ```
 
 ## Default Video Tags (99/500 chars)

@@ -10,8 +10,7 @@ OUTPUT_DIR = Path("output/channel")
 CHANNEL_DESCRIPTION = (
     "Screen recordings of music creation in Bitwig Studio. "
     "Each episode captures a full session building a new track from scratch. "
-    "No narration, no edits \u2014 just the creative process.\n\n"
-    "https://jalopy.music/"
+    "No narration, no edits \u2014 just the creative process.\n"
 )
 
 CHANNEL_KEYWORDS = (
