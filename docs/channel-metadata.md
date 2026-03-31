@@ -17,10 +17,10 @@ Screen recordings of music creation in Bitwig Studio. Each episode captures a fu
 https://jalopy.music/
 ```
 
-## Default Video Title Pattern (15/100 chars)
+## Default Video Title Pattern (17/100 chars)
 
 ```
-Bitwig Folk 000
+Folk Sequence 001
 ```
 
 ## Default Video Description (82/5000 chars)
@@ -68,7 +68,7 @@ no text. Aspect ratio 16:9.
 **Gemini Prompt Template:**
 ```
 Generate a YouTube thumbnail for a music production video titled
-"Bitwig Folk {NNN}". Show an abstract representation of a digital audio
+"Folk Sequence {NNN}". Show an abstract representation of a digital audio
 workstation screen with colorful track lanes, MIDI notes, and waveforms.
 Use a warm color palette with amber, orange, and teal accents on a dark
 background. Include the text "{NNN}" in a large, bold, modern sans-serif

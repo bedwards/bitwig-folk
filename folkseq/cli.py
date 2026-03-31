@@ -59,9 +59,9 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
 examples:
-  folkseq transcode "Bitwig Folk 000.mov"
-  folkseq thumbnail 000
-  folkseq upload 000
+  folkseq transcode "Folk Sequence 001.mov"
+  folkseq thumbnail 001
+  folkseq upload 001
   folkseq schedule --days 7
   folkseq status
   folkseq channel --type banner

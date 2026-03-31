@@ -8,7 +8,8 @@ Automated pipeline for processing and uploading Bitwig Studio screen recordings 
 - **URL**: https://www.youtube.com/@FolkSequence
 - **Website**: https://jalopy.music/
 - **Content**: Screen recordings of music creation in Bitwig Studio — no narration, no edits
-- **Source videos**: `/Volumes/Lacie/videos/bitwig-folk/Bitwig Folk NNN.mov`
+- **Source videos**: `/Volumes/Lacie/videos/bitwig-folk/Folk Sequence NNN.mov`
+- **Note**: Video 000 (`Bitwig Folk 000.mov`) exists but will not be posted (screen recording mistake). Series starts at 001.
 
 ## Pipeline Steps
 
@@ -52,7 +53,7 @@ ffmpeg -i input.mov \
   -y output.mp4
 ```
 
-### Source Video Stats (Bitwig Folk 000.mov)
+### Source Video Stats (Folk Sequence 000.mov)
 
 - Resolution: 4096x2328 (non-standard, needs crop+scale)
 - Codec: H.264 Main, ~4.2 Mbps, ~60fps VFR, yuv420p BT.709
@@ -83,9 +84,9 @@ ffmpeg -i input.mov \
 
 ## Video Naming Convention
 
-- Source: `Bitwig Folk NNN.mov` (NNN = zero-padded 3 digits)
-- Output: `bitwig-folk-NNN.mp4`
-- YouTube title: `Bitwig Folk NNN`
+- Source: `Folk Sequence NNN.mov` (NNN = zero-padded 3 digits)
+- Output: `folk-sequence-NNN.mp4`
+- YouTube title: `Folk Sequence NNN`
 
 ## Channel Metadata
 

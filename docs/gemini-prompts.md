@@ -61,7 +61,7 @@ Score 1-10 and explain your reasoning.
 ### Generation Prompt Template
 ```
 Generate a YouTube thumbnail for a music production video titled
-"Bitwig Folk {NNN}". Show an abstract representation of a digital audio
+"Folk Sequence {NNN}". Show an abstract representation of a digital audio
 workstation screen with colorful track lanes, MIDI notes, and waveforms.
 Use a warm color palette with amber, orange, and teal accents on a dark
 background. Include the text "{NNN}" in a large, bold, modern sans-serif

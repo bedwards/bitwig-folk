@@ -10,12 +10,12 @@ Source .mov  -->  Transcode  -->  Thumbnail  -->  Upload  -->  Schedule
 ## 1. Transcode
 
 ### Input
-- Path: `/Volumes/Lacie/videos/bitwig-folk/Bitwig Folk NNN.mov`
+- Path: `/Volumes/Lacie/videos/bitwig-folk/Folk Sequence NNN.mov`
 - Format: H.264 Main, 4096x2328, ~60fps VFR, AAC-LC 100kbps
 
 ### ffmpeg Command
 ```bash
-ffmpeg -i "Bitwig Folk NNN.mov" \
+ffmpeg -i "Folk Sequence NNN.mov" \
   -vf "crop=4096:2304:0:12,scale=3840:2160:flags=lanczos" \
   -c:v libx264 -profile:v high -level 5.1 -preset slow \
   -b:v 35M -maxrate 40M -bufsize 80M \
@@ -24,7 +24,7 @@ ffmpeg -i "Bitwig Folk NNN.mov" \
   -colorspace bt709 -color_primaries bt709 -color_trc bt709 \
   -c:a aac -b:a 384k -ar 48000 -ac 2 \
   -movflags +faststart \
-  -y "bitwig-folk-NNN.mp4"
+  -y "folk-sequence-NNN.mp4"
 ```
 
 ### Processing Notes
@@ -36,7 +36,7 @@ ffmpeg -i "Bitwig Folk NNN.mov" \
 - `-movflags +faststart` moves moov atom to front for streaming
 
 ### Output
-- Path: `output/bitwig-folk-NNN.mp4`
+- Path: `output/folk-sequence-NNN.mp4`
 - Expected size: ~3.9 GB for a 15-min video at 35 Mbps
 
 ## 2. Thumbnail Generation
@@ -49,7 +49,7 @@ ffmpeg -i "Bitwig Folk NNN.mov" \
 5. Analyze with Gemini, pick best of 3 candidates
 
 ### Output
-- Path: `output/thumbnails/bitwig-folk-NNN.jpg`
+- Path: `output/thumbnails/folk-sequence-NNN.jpg`
 - Size: 1280x720, JPEG, < 2 MB
 
 ## 3. Upload
@@ -58,7 +58,7 @@ ffmpeg -i "Bitwig Folk NNN.mov" \
 1. Load OAuth 2.0 credentials (refresh token)
 2. Build `youtube` service client
 3. Create `videos.insert` request with:
-   - `snippet.title`: "Bitwig Folk NNN"
+   - `snippet.title`: "Folk Sequence NNN"
    - `snippet.description`: video description with jalopy.music link
    - `snippet.tags`: default tag set
    - `snippet.categoryId`: "10" (Music)
@@ -101,15 +101,15 @@ def next_publish_time(start_date, episode_offset):
 
 ```
 output/
-  bitwig-folk-000.mp4
-  bitwig-folk-001.mp4
+  folk-sequence-001.mp4
+  folk-sequence-002.mp4
   thumbnails/
-    bitwig-folk-000.jpg
-    bitwig-folk-001.jpg
+    folk-sequence-001.jpg
+    folk-sequence-002.jpg
   channel/
     profile.png      (800x800)
     banner.png       (2560x1440)
   logs/
-    upload-000.json   (API response)
-    upload-001.json
+    upload-001.json   (API response)
+    upload-002.json
 ```

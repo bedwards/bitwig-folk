@@ -39,13 +39,13 @@ uv run folkseq doctor
 
 ```bash
 # Transcode a video for YouTube
-uv run folkseq transcode "/Volumes/Lacie/videos/bitwig-folk/Bitwig Folk 000.mov"
+uv run folkseq transcode "/Volumes/Lacie/videos/bitwig-folk/Folk Sequence 001.mov"
 
 # Generate a thumbnail
-uv run folkseq thumbnail 000
+uv run folkseq thumbnail 001
 
 # Upload with scheduling
-uv run folkseq upload 000
+uv run folkseq upload 001
 
 # Schedule next 7 days of uploads
 uv run folkseq schedule --days 7
@@ -78,9 +78,9 @@ Uses YouTube Data API v3 with resumable uploads. Videos are uploaded as private 
 
 | Component | Format | Example |
 |-----------|--------|---------|
-| Source file | `Bitwig Folk NNN.mov` | `Bitwig Folk 000.mov` |
-| Output file | `bitwig-folk-NNN.mp4` | `bitwig-folk-000.mp4` |
-| YouTube title | `Bitwig Folk NNN` | `Bitwig Folk 000` |
+| Source file | `Folk Sequence NNN.mov` | `Folk Sequence 001.mov` |
+| Output file | `folk-sequence-NNN.mp4` | `folk-sequence-001.mp4` |
+| YouTube title | `Folk Sequence NNN` | `Folk Sequence 001` |
 
 ## License
 
