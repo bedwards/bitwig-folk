@@ -102,7 +102,7 @@ examples:
 
     # channel
     p = subparsers.add_parser("channel", help="Generate channel assets")
-    p.add_argument("--type", choices=["profile", "banner", "all"], default="all", help="Asset type to generate")
+    p.add_argument("--type", choices=["profile", "banner", "metadata", "all"], default="all", help="Asset type to generate/set")
     p.set_defaults(func=cmd_channel)
 
     # auth
