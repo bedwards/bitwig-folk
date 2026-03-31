@@ -23,7 +23,7 @@ def cmd_upload(args):
 
 
 def cmd_schedule(args):
-    """Schedule next N videos for daily upload at 7:30 AM Central."""
+    """Schedule next N videos for daily upload at 3:00 PM Central."""
     from folkseq.schedule import schedule_videos
     schedule_videos(start=args.start, days=args.days)
 

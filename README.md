@@ -10,7 +10,7 @@ Automated pipeline for processing Bitwig Studio screen recordings and uploading 
 1. **Transcodes** raw screen recordings (`.mov`) to YouTube-optimized 4K `.mp4`
 2. **Generates thumbnails** using Gemini AI image generation
 3. **Uploads** to YouTube with metadata, thumbnail, and scheduled publish time
-4. **Schedules** one video per day at 7:30 AM Central Time
+4. **Schedules** one video per day at 3:00 PM Central Time
 
 ## Prerequisites
 
@@ -72,7 +72,7 @@ Uses Google Gemini Nano Banana 2 (`gemini-3.1-flash-image-preview`) to generate 
 
 ### YouTube Upload
 
-Uses YouTube Data API v3 with resumable uploads. Videos are uploaded as private and scheduled to publish at 7:30 AM Central Time, one per day.
+Uses YouTube Data API v3 with resumable uploads. Videos are uploaded as private and scheduled to publish at 3:00 PM Central Time, one per day.
 
 ## Video Naming
 

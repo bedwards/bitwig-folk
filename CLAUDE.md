@@ -16,7 +16,7 @@ Automated pipeline for processing and uploading Bitwig Studio screen recordings 
 1. **Transcode** source `.mov` to YouTube-optimized `.mp4` using ffmpeg
 2. **Generate thumbnail** using Gemini Nano Banana 2 image generation API
 3. **Upload** to YouTube via Data API v3 with scheduled publish time
-4. **Schedule** one video per day at 7:30 AM US Central (CDT: UTC-5 / CST: UTC-6)
+4. **Schedule** one video per day at 3:00 PM US Central (CDT: UTC-5 / CST: UTC-6)
 
 ## CLI Tool: `folkseq`
 
@@ -35,7 +35,7 @@ folkseq <command> --help
 | `transcode` | Convert source .mov to YouTube-optimized .mp4 |
 | `thumbnail` | Generate thumbnail using Gemini image generation |
 | `upload` | Upload video to YouTube with metadata and thumbnail |
-| `schedule` | Schedule next N videos for daily upload at 7:30 AM Central |
+| `schedule` | Schedule next N videos for daily upload at 3:00 PM Central |
 | `status` | Show pipeline status for all videos |
 | `channel` | Generate/update channel metadata assets |
 
@@ -77,9 +77,10 @@ ffmpeg -i input.mov \
 
 ## Scheduling Logic
 
-- One video per day at 7:30 AM US Central Time
-- CDT (Mar-Nov): UTC-5 -> 12:30 UTC
-- CST (Nov-Mar): UTC-6 -> 13:30 UTC
+- One video per day at 3:00 PM US Central Time
+- CDT (Mar-Nov): UTC-5 -> 20:00 UTC
+- CST (Nov-Mar): UTC-6 -> 21:00 UTC
+- Rationale: 2-3 hours before peak viewing (6-9 PM) gives algorithm time to index and ramp distribution
 - Use `zoneinfo.ZoneInfo("America/Chicago")` for automatic DST handling
 
 ## Video Naming Convention

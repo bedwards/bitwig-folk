@@ -88,14 +88,14 @@ def next_publish_time(start_date, episode_offset):
     publish_date = start_date + timedelta(days=episode_offset)
     local_time = datetime(
         publish_date.year, publish_date.month, publish_date.day,
-        7, 30, 0, tzinfo=central
+        15, 0, 0, tzinfo=central
     )
     return local_time.isoformat()
 ```
 
 ### DST Handling
 - `America/Chicago` automatically handles CDT (UTC-5) and CST (UTC-6)
-- 7:30 AM Central is always 7:30 AM local regardless of DST
+- 3:00 PM Central is always 3:00 PM local regardless of DST
 
 ## 5. Output Directory Structure
 
