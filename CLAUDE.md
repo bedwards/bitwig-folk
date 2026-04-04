@@ -120,6 +120,15 @@ YouTube does not allow replacing a video file. To fix an already-uploaded episod
 - Output: `folk-sequence-NNN.mp4`
 - YouTube title: `Folk Sequence NNN`
 
+## Face Cutout Compositing
+
+- **Source**: `output/faces/` — ~45 PNG cutouts with transparent backgrounds
+- **Cycling**: Sequential by episode number, wraps around: `cutouts[(episode - 1) % len(cutouts)]`
+- **Thumbnail placement**: Bottom edge, left side. X varies per episode: `(episode * 137) % 320 + 80` pixels from left. Face height: 320px.
+- **Banner**: One cutout composited onto channel banner at bottom-right (`SouthEast +300+0`, 600px tall)
+- **Pipeline**: `folkseq thumbnail` automatically composites a face after generating the base image. Base saved as `-base.jpg`, final with face as `.jpg`.
+- **In-place updates**: `thumbnails.set` API can update thumbnails on both public and private videos without affecting any other metadata (title, description, publish date, privacy status).
+
 ## Channel Metadata
 
 - **Name**: Folk Sequence (13/100 chars)

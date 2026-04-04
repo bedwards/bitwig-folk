@@ -9,6 +9,7 @@ from google import genai
 from google.genai import types
 
 OUTPUT_DIR = Path("output/thumbnails")
+FACES_DIR = Path("output/faces")
 
 GENERATION_PROMPT = """\
 Generate a YouTube thumbnail for a music production video titled
@@ -45,6 +46,42 @@ def _extract_score(text):
     if match:
         return int(match.group(1))
     return 0
+
+
+def _get_face_cutouts():
+    """Return sorted list of face cutout paths."""
+    if not FACES_DIR.exists():
+        return []
+    return sorted(FACES_DIR.glob("*.png"))
+
+
+def _composite_face(episode, base_path, final_path):
+    """Composite a face cutout onto the base thumbnail.
+
+    Cycles through cutouts sequentially. X position varies per episode
+    along the bottom-left region (80-400px from left edge).
+    """
+    cutouts = _get_face_cutouts()
+    if not cutouts:
+        print("  No face cutouts found in output/faces/ — skipping composite.")
+        # Just copy base to final
+        subprocess.run(["cp", str(base_path), str(final_path)], check=True)
+        return
+
+    ep_num = int(episode)
+    cutout = cutouts[(ep_num - 1) % len(cutouts)]
+    x_offset = (ep_num * 137) % 320 + 80
+
+    print(f"  Compositing face: {cutout.name} at x={x_offset}")
+    subprocess.run(
+        [
+            "magick", str(base_path),
+            "(", str(cutout), "-resize", "x320", ")",
+            "-gravity", "SouthWest", "-geometry", f"+{x_offset}+0",
+            "-composite", "-quality", "95", str(final_path),
+        ],
+        check=True,
+    )
 
 
 def generate_thumbnail(episode, candidates=3):
@@ -120,14 +157,18 @@ def generate_thumbnail(episode, candidates=3):
     best_score, best_path, best_idx = results[0]
     print(f"\nBest candidate: #{best_idx} (score {best_score}/10)")
 
-    # Post-process with ImageMagick
+    # Post-process with ImageMagick — resize to 1280x720
+    base_path = OUTPUT_DIR / f"folk-sequence-{episode}-base.jpg"
     final_path = OUTPUT_DIR / f"folk-sequence-{episode}.jpg"
-    print(f"Post-processing with ImageMagick...")
+    print("Post-processing with ImageMagick...")
 
     subprocess.run(
-        ["magick", str(best_path), "-resize", "1280x720!", "-quality", "95", str(final_path)],
+        ["magick", str(best_path), "-resize", "1280x720!", "-quality", "95", str(base_path)],
         check=True,
     )
+
+    # Composite face cutout onto thumbnail
+    _composite_face(episode, base_path, final_path)
 
     print(f"Saved final thumbnail: {final_path}")
     print(f"\nSummary:")
