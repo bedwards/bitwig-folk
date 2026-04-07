@@ -52,6 +52,15 @@ def cmd_doctor(args):
     check_all()
 
 
+def cmd_essay(args):
+    """Attach a companion essay to an episode (description + comment)."""
+    from folkseq.essay import add_essay, post_pending_comments
+    if args.retry_pending:
+        post_pending_comments()
+    else:
+        add_essay(args.episode, args.url, args.title, args.comment)
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="folkseq",
@@ -112,6 +121,15 @@ examples:
     # doctor
     p = subparsers.add_parser("doctor", help="Verify tools and credentials")
     p.set_defaults(func=cmd_doctor)
+
+    # essay
+    p = subparsers.add_parser("essay", help="Attach companion essay to an episode")
+    p.add_argument("episode", nargs="?", help="Episode number (e.g., 001)")
+    p.add_argument("--url", help="Public gist URL")
+    p.add_argument("--title", help="Essay title")
+    p.add_argument("--comment", help="Comment text (also appended to description)")
+    p.add_argument("--retry-pending", action="store_true", help="Retry posting comments queued from when videos were private")
+    p.set_defaults(func=cmd_essay)
 
     args = parser.parse_args()
     try:

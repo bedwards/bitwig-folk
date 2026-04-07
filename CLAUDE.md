@@ -129,6 +129,33 @@ YouTube does not allow replacing a video file. To fix an already-uploaded episod
 - **Pipeline**: `folkseq thumbnail` automatically composites a face after generating the base image. Base saved as `-base.jpg`, final with face as `.jpg`.
 - **In-place updates**: `thumbnails.set` API can update thumbnails on both public and private videos without affecting any other metadata (title, description, publish date, privacy status).
 
+## Companion Essays
+
+Every episode has a companion essay published as a public GitHub gist. Each essay is unique to the episode, written in long-form prose suitable for Speechify TTS (no headers, no lists, no tables, flowing paragraphs of varied length). The essay link goes in two places: the video description (always) and a top-level comment from the channel owner (post-publish).
+
+**Voice rules** (derived from Brian's writing on lluminate.substack.com):
+- First principles derivation, not prescription. Trace concepts to underlying truths.
+- Differentiate concepts from similar ideas AND their opposites — explicit contrast.
+- Expose unstated assumptions and axioms in conventional wisdom; build unique value from there.
+- Opinionated, edgy, take sides. Convictions stated plainly without hedging.
+- Avoid jargon; spell out acronyms on first use.
+- Vary sentence and paragraph length naturally — no bursts of short punchy sentences, no one-sentence paragraphs.
+- No section headers, no lists, no tables, no diagrams. Title at top only. Flowing prose only.
+- Use "the X" abstractions for clean reference (e.g. "the producer", "the listener").
+- Each essay must be unique and specific. If someone reads all essays back to back, no point should be redundant.
+- Web search to capture the moment (Bitwig releases, music industry news, scene shifts).
+
+**Format**: Description footer template appends `Companion essay: TITLE\nURL\n\nCOMMENT\n\njalopy.music`. The same comment text + URL is posted as a top-level comment via `commentThreads.insert`.
+
+**Algorithm safety**: `videos().update()` on description does NOT trigger re-upload behavior or affect publish date. Confirmed safe via API docs and testing. Pinning comments must be done manually in YouTube Studio (no API for it).
+
+**Comments on private videos fail**: Scheduled-private videos cannot accept comments. Use `folkseq essay --retry-pending` to post queued comments after each video goes public. Run it daily after 3:00 PM Central, or set up a cron job.
+
+**Commands**:
+- `folkseq essay NNN --url URL --title "..." --comment "..."` — register essay, update description, attempt comment
+- `folkseq essay --retry-pending` — retry failed comments for any videos that are now public
+- State stored in `output/logs/essays.json`
+
 ## Channel Metadata
 
 - **Name**: Folk Sequence (13/100 chars)
