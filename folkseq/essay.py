@@ -170,7 +170,7 @@ def add_essay(episode, gist_url, title, comment):
                     "videoId": video_id,
                     "topLevelComment": {
                         "snippet": {
-                            "textOriginal": f"{comment}\n\n{gist_url}",
+                            "textOriginal": f"{gist_url} {comment}",
                         },
                     },
                 },
@@ -228,7 +228,7 @@ def post_pending_comments():
                         "videoId": video_id,
                         "topLevelComment": {
                             "snippet": {
-                                "textOriginal": f"{essay['comment']}\n\n{essay['url']}",
+                                "textOriginal": f"{essay['url']} {essay['comment']}",
                             },
                         },
                     },
