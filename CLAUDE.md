@@ -164,7 +164,7 @@ Every episode has a companion essay published as a public GitHub gist. Each essa
 5. `cat /tmp/...md | gh gist create --public --desc "..." --filename "folk-sequence-NNN-slug.md"` — capture URL
 6. `folkseq essay NNN --url URL --title "..." --comment "..."` — registers essay (says "not yet uploaded" — that's fine)
 7. `folkseq schedule --days 1`
-8. `folkseq upload NNN` — REQUIRES the essay to exist (hard-fails otherwise). Description is built from the essay, no fallback.
+8. `folkseq upload NNN` — REQUIRES the essay to exist (hard-fails otherwise). Description is built from the essay, no fallback. After successful upload, automatically PATCHes the gist to add `Watch on YouTube: https://youtu.be/VIDEO_ID` at the top (after the subtitle line) and at the bottom (after a separator).
 9. After 3 PM publish: cron loop posts the comment automatically (must be running)
 10. Manually pin the comment in YouTube Studio
 

@@ -7,6 +7,7 @@ those are queued and posted automatically once the video goes public.
 """
 
 import json
+import subprocess
 from pathlib import Path
 
 OUTPUT_DIR = Path("output")
@@ -33,6 +34,70 @@ def _video_id_for_episode(episode):
         if entry["episode"] == episode:
             return entry.get("video_id")
     return None
+
+
+def attach_video_link_to_gist(episode, video_id):
+    """Add YouTube video links to top and bottom of the gist for an episode.
+
+    Idempotent — if the link is already present, does nothing.
+    Called by `folkseq upload` after a successful upload.
+    """
+    essays = _load_essays()
+    essay = essays.get(episode)
+    if not essay:
+        print(f"  No essay registered for episode {episode} — skipping gist update")
+        return
+
+    gist_url = essay["url"]
+    gist_id = gist_url.rsplit("/", 1)[-1]
+    youtube_url = f"https://youtu.be/{video_id}"
+
+    # Fetch current gist to get filename and content
+    result = subprocess.run(
+        ["gh", "api", f"/gists/{gist_id}"],
+        capture_output=True, text=True
+    )
+    if result.returncode != 0:
+        print(f"  Gist fetch FAILED: {result.stderr.strip()[:200]}")
+        return
+    gist = json.loads(result.stdout)
+    if not gist.get("files"):
+        print(f"  Gist has no files")
+        return
+
+    filename = next(iter(gist["files"]))
+    content = gist["files"][filename]["content"]
+
+    # Idempotency check
+    if youtube_url in content:
+        print(f"  Gist already has video link — skipping")
+        return
+
+    # Add link at top (after first "A Folk Sequence essay" line) and at bottom
+    lines = content.split("\n")
+    new_lines = []
+    inserted_top = False
+    for line in lines:
+        new_lines.append(line)
+        if not inserted_top and line.startswith("A Folk Sequence essay"):
+            new_lines.append("")
+            new_lines.append(f"Watch on YouTube: {youtube_url}")
+            inserted_top = True
+    new_content = "\n".join(new_lines).rstrip() + f"\n\n---\n\nWatch on YouTube: {youtube_url}\n"
+
+    # PATCH the gist
+    payload = {"files": {filename: {"content": new_content}}}
+    payload_path = Path(f"/tmp/gist-patch-{episode}.json")
+    payload_path.write_text(json.dumps(payload))
+    result = subprocess.run(
+        ["gh", "api", "-X", "PATCH", f"/gists/{gist_id}", "--input", str(payload_path)],
+        capture_output=True, text=True
+    )
+    payload_path.unlink()
+    if result.returncode == 0:
+        print(f"  Gist updated with YouTube link")
+    else:
+        print(f"  Gist update FAILED: {result.stderr.strip()[:200]}")
 
 
 def _make_description(title, url, comment):

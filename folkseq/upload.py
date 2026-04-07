@@ -213,4 +213,9 @@ def upload(episode, schedule=None):
     save_schedule(entries)
     print(f"Schedule updated with video_id: {video_id}")
 
+    # Add YouTube link to companion essay gist (top and bottom)
+    print("Updating companion essay gist with YouTube link...")
+    from folkseq.essay import attach_video_link_to_gist
+    attach_video_link_to_gist(episode, video_id)
+
     print("Done.")
