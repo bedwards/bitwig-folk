@@ -7,7 +7,10 @@ from pathlib import Path
 TOKEN_PATH = Path("token.json")
 CLIENT_SECRETS_PATH = Path("client_secrets.json")
 
-SCOPES = ["https://www.googleapis.com/auth/youtube.force-ssl"]
+SCOPES = [
+    "https://www.googleapis.com/auth/youtube.force-ssl",
+    "https://www.googleapis.com/auth/yt-analytics.readonly",
+]
 
 
 def get_credentials():

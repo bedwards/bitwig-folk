@@ -259,4 +259,32 @@ def upload(episode, schedule=None):
     from folkseq.essay import attach_video_link_to_gist
     attach_video_link_to_gist(episode, video_id)
 
+    # Add to "Folk Sequence — Full series" playlist if registered
+    _add_to_playlist(youtube, video_id, episode)
+
     print("Done.")
+
+
+def _add_to_playlist(youtube, video_id, episode):
+    """Add the freshly uploaded video to the channel playlist if one is registered."""
+    from googleapiclient.errors import HttpError
+    playlist_state = LOGS_DIR / "playlist.json"
+    if not playlist_state.exists():
+        return
+    state = json.loads(playlist_state.read_text())
+    playlist_id = state.get("playlist_id")
+    if not playlist_id:
+        return
+    try:
+        youtube.playlistItems().insert(
+            part="snippet",
+            body={
+                "snippet": {
+                    "playlistId": playlist_id,
+                    "resourceId": {"kind": "youtube#video", "videoId": video_id},
+                },
+            },
+        ).execute()
+        print(f"Added episode {episode} to playlist {state.get('title', playlist_id)}")
+    except HttpError as e:
+        print(f"WARNING: failed to add to playlist: {e}")
