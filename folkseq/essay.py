@@ -1,18 +1,28 @@
 """Attach companion essays to Folk Sequence videos.
 
-Each episode has a companion essay published as a public GitHub gist.
-This module updates video descriptions and posts owner comments linking
-to the essay. Comments cannot be posted on private/scheduled videos —
-those are queued and posted automatically once the video goes public.
+Each episode has a companion essay published as a markdown file in the
+folk-sequence.github.io Jekyll site. This module:
+
+- Publishes the essay to the Pages repo (commit + push), deriving the URL
+- Updates the YouTube video description with the essay link
+- Posts an owner comment with the link
+- After upload, adds the YouTube link to the essay front matter and pushes
+
+Comments cannot be posted on private/scheduled videos — those are queued
+and posted automatically once the video goes public via --retry-pending.
 """
 
 import json
+import re
 import subprocess
 from pathlib import Path
 
 OUTPUT_DIR = Path("output")
 ESSAYS_PATH = OUTPUT_DIR / "logs" / "essays.json"
 SCHEDULE_PATH = OUTPUT_DIR / "logs" / "schedule.json"
+
+PAGES_REPO = Path.home() / "vibe" / "folk-sequence.github.io"
+PAGES_SITE_URL = "https://folk-sequence.github.io"
 
 
 def _load_essays():
@@ -36,68 +46,148 @@ def _video_id_for_episode(episode):
     return None
 
 
-def attach_video_link_to_gist(episode, video_id):
-    """Add YouTube video links to top and bottom of the gist for an episode.
+def _slugify(text):
+    s = text.lower().strip()
+    s = re.sub(r"[^\w\s-]", "", s)
+    s = re.sub(r"[\s_]+", "-", s)
+    return re.sub(r"-+", "-", s).strip("-")
 
-    Idempotent — if the link is already present, does nothing.
+
+def _essay_basename(episode, title):
+    return f"{episode}-{_slugify(title)}"
+
+
+def _essay_path(episode, title):
+    return PAGES_REPO / f"{_essay_basename(episode, title)}.md"
+
+
+def _essay_url(episode, title):
+    return f"{PAGES_SITE_URL}/{_essay_basename(episode, title)}/"
+
+
+def _yaml_quote(s):
+    return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def _strip_leading_title(body):
+    """Strip a leading H1 and any subtitle/italic line + blank lines."""
+    lines = body.splitlines()
+    i = 0
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    if i < len(lines) and lines[i].lstrip().startswith("# "):
+        i += 1
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    if i < len(lines) and (lines[i].startswith("*") or "companion essay" in lines[i].lower()):
+        i += 1
+    while i < len(lines) and not lines[i].strip():
+        i += 1
+    return "\n".join(lines[i:]).strip() + "\n"
+
+
+def _git_commit_push(message):
+    """Commit whatever is staged in PAGES_REPO and push to origin/main."""
+    subprocess.run(["git", "-C", str(PAGES_REPO), "commit", "-q", "-m", message], check=True)
+    subprocess.run(["git", "-C", str(PAGES_REPO), "push", "origin", "main"], check=True, capture_output=True)
+
+
+def publish_essay_to_pages(episode, title, topic, source_file):
+    """Copy a source markdown file into the Pages repo with front matter, commit, push.
+
+    Returns the published essay URL.
+    """
+    if not PAGES_REPO.exists():
+        raise SystemExit(f"Pages repo not found at {PAGES_REPO}")
+
+    src = Path(source_file)
+    if not src.exists():
+        raise SystemExit(f"Essay file not found: {src}")
+
+    body = _strip_leading_title(src.read_text())
+
+    fm = "\n".join([
+        "---",
+        "layout: essay",
+        f"title: {_yaml_quote(title)}",
+        f'episode: "{episode}"',
+        f"topic: {_yaml_quote(topic)}",
+        f"description: {_yaml_quote(title + ' — companion essay for Folk Sequence ' + episode)}",
+        "---",
+        "",
+        "",
+    ])
+
+    dest = _essay_path(episode, title)
+    dest.write_text(fm + body)
+
+    subprocess.run(["git", "-C", str(PAGES_REPO), "add", dest.name], check=True)
+    _git_commit_push(f"Add essay {episode}: {title}")
+
+    url = _essay_url(episode, title)
+    print(f"  Essay published: {url}")
+    return url
+
+
+def attach_video_link_to_essay(episode, video_id):
+    """Add a `youtube:` field to the essay front matter and push.
+
+    Idempotent — if the YouTube link is already present, does nothing.
     Called by `folkseq upload` after a successful upload.
     """
     essays = _load_essays()
     essay = essays.get(episode)
     if not essay:
-        print(f"  No essay registered for episode {episode} — skipping gist update")
+        print(f"  No essay registered for episode {episode} — skipping essay update")
         return
 
-    gist_url = essay["url"]
-    gist_id = gist_url.rsplit("/", 1)[-1]
+    title = essay.get("title", "")
+    if not title:
+        print(f"  No title for episode {episode} — skipping essay update")
+        return
+
+    path = _essay_path(episode, title)
+    if not path.exists():
+        print(f"  Essay markdown not found at {path} — skipping")
+        return
+
     youtube_url = f"https://youtu.be/{video_id}"
-
-    # Fetch current gist to get filename and content
-    result = subprocess.run(
-        ["gh", "api", f"/gists/{gist_id}"],
-        capture_output=True, text=True
-    )
-    if result.returncode != 0:
-        print(f"  Gist fetch FAILED: {result.stderr.strip()[:200]}")
-        return
-    gist = json.loads(result.stdout)
-    if not gist.get("files"):
-        print(f"  Gist has no files")
-        return
-
-    filename = next(iter(gist["files"]))
-    content = gist["files"][filename]["content"]
-
-    # Idempotency check
+    content = path.read_text()
     if youtube_url in content:
-        print(f"  Gist already has video link — skipping")
+        print(f"  Essay already has YouTube link — skipping")
         return
 
-    # Add link at top (after first "A Folk Sequence essay" line) and at bottom
-    lines = content.split("\n")
+    lines = content.splitlines()
     new_lines = []
-    inserted_top = False
+    in_fm = False
+    seen_first_fence = False
+    inserted = False
     for line in lines:
+        if line.strip() == "---":
+            if not seen_first_fence:
+                seen_first_fence = True
+                in_fm = True
+                new_lines.append(line)
+                continue
+            if in_fm and not inserted:
+                new_lines.append(f'youtube: "{youtube_url}"')
+                inserted = True
+            in_fm = False
+            new_lines.append(line)
+            continue
+        if in_fm and line.startswith("youtube:"):
+            continue
         new_lines.append(line)
-        if not inserted_top and line.startswith("A Folk Sequence essay"):
-            new_lines.append("")
-            new_lines.append(f"Watch on YouTube: {youtube_url}")
-            inserted_top = True
-    new_content = "\n".join(new_lines).rstrip() + f"\n\n---\n\nWatch on YouTube: {youtube_url}\n"
 
-    # PATCH the gist
-    payload = {"files": {filename: {"content": new_content}}}
-    payload_path = Path(f"/tmp/gist-patch-{episode}.json")
-    payload_path.write_text(json.dumps(payload))
-    result = subprocess.run(
-        ["gh", "api", "-X", "PATCH", f"/gists/{gist_id}", "--input", str(payload_path)],
-        capture_output=True, text=True
-    )
-    payload_path.unlink()
-    if result.returncode == 0:
-        print(f"  Gist updated with YouTube link")
-    else:
-        print(f"  Gist update FAILED: {result.stderr.strip()[:200]}")
+    path.write_text("\n".join(new_lines) + ("\n" if content.endswith("\n") else ""))
+
+    try:
+        subprocess.run(["git", "-C", str(PAGES_REPO), "add", path.name], check=True, capture_output=True)
+        _git_commit_push(f"Add YouTube link to {path.name}")
+        print(f"  Essay updated with YouTube link and pushed")
+    except subprocess.CalledProcessError as e:
+        err = e.stderr.decode() if getattr(e, "stderr", None) else ""
+        print(f"  Essay git push FAILED: {err[:200]}")
 
 
 def _make_description(title, url, comment):
@@ -112,28 +202,39 @@ def _make_description(title, url, comment):
     )
 
 
-def add_essay(episode, gist_url, title, comment, topic=None, tags=None):
+def add_essay(episode, url, title, comment, topic=None, tags=None, source_file=None):
     """Register an essay for an episode and apply it to YouTube.
 
     Idempotent. Safe to re-run.
 
     Args:
         episode: Episode number string (e.g., "001").
-        gist_url: Public gist URL.
+        url: Public essay URL (folk-sequence.github.io/NNN-slug/). If
+            source_file is also given, this is ignored and the URL is
+            derived from the title after publishing to the Pages repo.
         title: Essay title (used in description block).
         comment: Comment text (used in description and YouTube comment).
         topic: Short SEO topic phrase used in the video title:
             "Folk Sequence NNN — {topic}". REQUIRED for upload to work.
         tags: List of per-episode tags appended to the global base tags.
+        source_file: Optional path to a raw markdown essay. If provided,
+            the essay is committed to the Pages repo with front matter
+            and the derived URL is used.
     """
     from folkseq.auth import build_youtube
     from googleapiclient.errors import HttpError
+
+    if source_file:
+        if not topic:
+            print("ERROR: --topic is required when publishing a new essay from --file")
+            raise SystemExit(1)
+        url = publish_essay_to_pages(episode, title, topic, source_file)
 
     essays = _load_essays()
     existing = essays.get(episode, {})
     essays[episode] = {
         "title": title,
-        "url": gist_url,
+        "url": url,
         "comment": comment,
         "topic": topic if topic is not None else existing.get("topic"),
         "tags": tags if tags is not None else existing.get("tags", []),

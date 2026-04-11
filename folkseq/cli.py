@@ -66,6 +66,7 @@ def cmd_essay(args):
             args.comment,
             topic=args.topic,
             tags=tags,
+            source_file=args.file,
         )
 
 
@@ -133,7 +134,8 @@ examples:
     # essay
     p = subparsers.add_parser("essay", help="Attach companion essay to an episode")
     p.add_argument("episode", nargs="?", help="Episode number (e.g., 001)")
-    p.add_argument("--url", help="Public gist URL")
+    p.add_argument("--file", help="Path to a raw markdown essay to publish to folk-sequence.github.io (auto-derives URL)")
+    p.add_argument("--url", help="Public essay URL on folk-sequence.github.io (ignored when --file is given)")
     p.add_argument("--title", help="Essay title (used in description block)")
     p.add_argument("--topic", help="Short SEO topic phrase used in the video title: 'Folk Sequence NNN — {topic}'")
     p.add_argument("--tags", help="Comma-separated per-episode tags appended to the global base tags")

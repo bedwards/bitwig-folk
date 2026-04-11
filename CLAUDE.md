@@ -131,7 +131,7 @@ YouTube does not allow replacing a video file. To fix an already-uploaded episod
 
 ## Companion Essays
 
-Every episode has a companion essay published as a public GitHub gist. Each essay is unique to the episode, written in long-form prose suitable for Speechify TTS (no headers, no lists, no tables, flowing paragraphs of varied length). The essay link goes in two places: the video description (always) and a top-level comment from the channel owner (post-publish).
+Every episode has a companion essay published on the [folk-sequence.github.io](https://folk-sequence.github.io) Jekyll site (repo: `folk-sequence/folk-sequence.github.io`, locally cloned at `~/vibe/folk-sequence.github.io`). Each essay is a markdown file at repo root named `NNN-slug.md` with Jekyll front matter (`layout: essay`, `title`, `episode`, `topic`, `youtube`, `description`) and renders at `https://folk-sequence.github.io/NNN-slug/`. Essays are long-form prose suitable for Speechify TTS (no headers, no lists, no tables, flowing paragraphs of varied length). The essay link goes in two places: the video description (always) and a top-level comment from the channel owner (post-publish).
 
 **Voice rules** (derived from Brian's writing on lluminate.substack.com):
 - First principles derivation, not prescription. Trace concepts to underlying truths.
@@ -147,12 +147,13 @@ Every episode has a companion essay published as a public GitHub gist. Each essa
 
 **Format**: Description footer template appends `Companion essay: TITLE\nURL\n\nCOMMENT\n\njalopy.music`. The same comment text + URL is posted as a top-level comment via `commentThreads.insert`.
 
-**Algorithm safety**: `videos().update()` on description does NOT trigger re-upload behavior or affect publish date. Confirmed safe via API docs and testing. Pinning comments must be done manually in YouTube Studio (no API for it).
+**Algorithm safety**: `videos().update()` on description does NOT trigger re-upload behavior or affect publish date. Confirmed safe via API docs and testing. Pinning comments must be done manually in YouTube Studio (no API for it). Comment bodies on public videos can be edited in place via `comments().update()` when the channel owns the comment — useful for retroactive URL fixes.
 
 **Comments on private videos fail**: Scheduled-private videos cannot accept comments. Use `folkseq essay --retry-pending` to post queued comments after each video goes public. Run it daily after 3:00 PM Central, or set up a cron job.
 
 **Commands**:
-- `folkseq essay NNN --url URL --title "..." --comment "..."` — register essay, update description, attempt comment
+- `folkseq essay NNN --file /tmp/essay.md --title "..." --topic "..." --tags "..." --comment "..."` — publishes the essay to the Pages repo (commit + push), derives the URL, registers in essays.json, patches YouTube description, attempts comment
+- `folkseq essay NNN --url URL --title "..." --comment "..."` — register essay without publishing (when the markdown is already in the Pages repo)
 - `folkseq essay --retry-pending` — retry failed comments for any videos that are now public
 - State stored in `output/logs/essays.json`
 
@@ -160,13 +161,12 @@ Every episode has a companion essay published as a public GitHub gist. Each essa
 1. Record `Folk Sequence NNN.mov` in Bitwig
 2. `folkseq transcode "/Volumes/Lacie/videos/folk-sequence/Folk Sequence NNN.mov"`
 3. `folkseq thumbnail NNN`
-4. Write essay to `/tmp/folk-sequence-NNN-slug.md`
-5. `cat /tmp/...md | gh gist create --public --desc "..." --filename "folk-sequence-NNN-slug.md"` — capture URL
-6. `folkseq essay NNN --url URL --title "..." --topic "..." --tags "tag1,tag2,tag3" --comment "..."` — registers essay with SEO metadata
-7. `folkseq schedule --days 1`
-8. `folkseq upload NNN` — REQUIRES the essay (with `topic`) to exist. Hard-fails otherwise. Title becomes `Folk Sequence NNN — {topic}`. Description leads with a keyword-rich opener and includes the essay block. Tags = global base tags + per-episode tags. After successful upload, automatically PATCHes the gist to add `Watch on YouTube: https://youtu.be/VIDEO_ID` at the top (after the subtitle line) and at the bottom (after a separator).
-9. After 3 PM publish: cron loop posts the comment automatically (must be running)
-10. Manually pin the comment in YouTube Studio
+4. Write essay to `/tmp/folk-sequence-NNN-slug.md` (no front matter needed — just the H1 title + body)
+5. `folkseq essay NNN --file /tmp/folk-sequence-NNN-slug.md --title "..." --topic "..." --tags "tag1,tag2,tag3" --comment "..."` — publishes the essay to `folk-sequence.github.io` (commit + push), derives the URL, registers essay with SEO metadata, updates YouTube description
+6. `folkseq schedule --days 1`
+7. `folkseq upload NNN` — REQUIRES the essay (with `topic`) to exist. Hard-fails otherwise. Title becomes `Folk Sequence NNN — {topic}`. Description leads with a keyword-rich opener and includes the essay block. Tags = global base tags + per-episode tags. After successful upload, automatically updates the essay front matter in the Pages repo to add `youtube: "https://youtu.be/VIDEO_ID"` and pushes.
+8. After 3 PM publish: cron loop posts the comment automatically (must be running)
+9. Manually pin the comment in YouTube Studio
 
 **SEO conventions** (encoded in `folkseq/upload.py`):
 - **Title**: `Folk Sequence NNN — {topic}` (keep topic short — total title under 70 chars)

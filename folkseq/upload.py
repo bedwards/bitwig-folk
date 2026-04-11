@@ -256,8 +256,8 @@ def upload(episode, schedule=None):
 
     # Add YouTube link to companion essay gist (top and bottom)
     print("Updating companion essay gist with YouTube link...")
-    from folkseq.essay import attach_video_link_to_gist
-    attach_video_link_to_gist(episode, video_id)
+    from folkseq.essay import attach_video_link_to_essay
+    attach_video_link_to_essay(episode, video_id)
 
     # Add to "Folk Sequence — Full series" playlist if registered
     _add_to_playlist(youtube, video_id, episode)
