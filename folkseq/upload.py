@@ -135,6 +135,48 @@ def resolve_publish_time(episode, schedule):
     return publish_time.isoformat()
 
 
+def recover(episode):
+    """Find an orphaned upload by title and patch schedule.json."""
+    from googleapiclient.errors import HttpError
+    from folkseq.auth import build_youtube
+    from folkseq.schedule import next_publish_time, get_last_scheduled
+
+    essay = _load_essay(episode)
+    title = _build_title(episode, essay)
+    youtube = build_youtube()
+
+    print(f"Searching YouTube for: '{title}'")
+    resp = youtube.search().list(
+        part="id,snippet",
+        q=title,
+        type="video",
+        maxResults=5,
+        mine=True,
+    ).execute()
+
+    for item in resp.get("items", []):
+        if item["id"]["kind"] != "youtube#video":
+            continue
+        vid = item["id"]["videoId"]
+        vid_title = item["snippet"]["title"]
+        if vid_title == title:
+            print(f"Found: {vid}")
+            # Patch schedule.json
+            entries = load_schedule()
+            entry = find_episode_entry(entries, episode)
+            publish_time_iso = entry["publish_at"] if entry else None
+            if entry:
+                entry["video_id"] = vid
+            else:
+                entries.append({"episode": episode, "publish_at": publish_time_iso, "video_id": vid})
+            save_schedule(entries)
+            (LOGS_DIR / f"video-id-{episode}.txt").write_text(vid)
+            print(f"schedule.json patched: {episode} -> {vid}")
+            return vid
+    print("No matching upload found.")
+    return None
+
+
 def upload(episode, schedule=None):
     """Upload a transcoded video to YouTube with metadata and thumbnail.
 
@@ -221,6 +263,10 @@ def upload(episode, schedule=None):
 
     video_id = response["id"]
     print(f"Uploaded: https://youtu.be/{video_id}")
+
+    # CRITICAL: persist video_id immediately — upload takes >5 min, may timeout
+    (LOGS_DIR / f"video-id-{episode}.txt").write_text(video_id)
+    (LOGS_DIR / f"video-id-latest.txt").write_text(f"{episode}:{video_id}")
 
     # Set thumbnail
     if has_thumbnail:

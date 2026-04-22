@@ -52,6 +52,28 @@ def cmd_doctor(args):
     check_all()
 
 
+def cmd_substack(args):
+    """Publish an episode to folksequence.substack.com."""
+    import os
+    from pathlib import Path
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    env_path = Path.home() / ".config" / ".env"
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, _, v = line.partition("=")
+                os.environ.setdefault(k.strip(), v.strip())
+
+    from folkseq.substack import publish_episode, CENTRAL
+    schedule = datetime.fromisoformat(args.schedule).astimezone(ZoneInfo("UTC")) if args.schedule else \
+        datetime.now(CENTRAL).replace(hour=15, minute=15, second=0, microsecond=0)
+    # Default: today at 3:15 PM Central
+    publish_episode(args.episode, schedule)
+
+
 def cmd_essay(args):
     """Attach a companion essay to an episode (description + comment)."""
     from folkseq.essay import add_essay, post_pending_comments
@@ -108,6 +130,11 @@ examples:
     p.add_argument("-s", "--schedule", help="Publish datetime (ISO 8601) or 'next' for next available slot")
     p.set_defaults(func=cmd_upload)
 
+    # upload-recover
+    p = subparsers.add_parser("upload-recover", help="Recover orphaned upload (timeout lost video_id)")
+    p.add_argument("episode", help="Episode number (e.g., 022)")
+    p.set_defaults(func=lambda args: __import__('folkseq.upload', fromlist=['recover']).recover(args.episode))
+
     # schedule
     p = subparsers.add_parser("schedule", help="Schedule batch of uploads")
     p.add_argument("--start", help="First episode to schedule (default: next unscheduled)")
@@ -130,6 +157,12 @@ examples:
     # doctor
     p = subparsers.add_parser("doctor", help="Verify tools and credentials")
     p.set_defaults(func=cmd_doctor)
+
+    # substack
+    p = subparsers.add_parser("substack", help="Publish episode to folksequence.substack.com")
+    p.add_argument("episode", help="Episode number (e.g., 019)")
+    p.add_argument("--schedule", help="ISO 8601 datetime (default: today 3:15 PM Central)")
+    p.set_defaults(func=cmd_substack)
 
     # essay
     p = subparsers.add_parser("essay", help="Attach companion essay to an episode")
